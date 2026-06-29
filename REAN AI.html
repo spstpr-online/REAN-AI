@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>កម្មវិធីសិក្សា AI សម្រាប់គ្រូបង្រៀន</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ================= Reset & Variables ================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary-color: #007bff;
+            --primary-hover: #0056b3;
+            --bg-color: #f4f7f6;
+            --sidebar-bg: #ffffff;
+            --text-dark: #333333;
+            --text-light: #495057;
+            --border-color: #e9ecef;
+        }
+
+        body {
+            font-family: 'Battambang', Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            background-color: var(--bg-color);
+            overflow: hidden;
+        }
+
+        /* ================= Custom Scrollbar ================= */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ================= Mobile Header ================= */
+        .mobile-header {
+            display: none;
+            background-color: #fff;
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--primary-color);
+        }
+
+        /* ================= Sidebar ================= */
+        .sidebar {
+            width: 280px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex; 
+            flex-direction: column;
+            padding: 20px 0;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.03);
+            overflow-y: auto;
+            z-index: 101;
+        }
+
+        .logo { width: 120px; display: block; margin: 0 auto 10px; }
+        .sidebar-title { text-align: center; color: var(--primary-color); font-size: 16px; font-weight: 700; margin: 0 0 20px 0; }
+        
+        .book-section { margin-bottom: 20px; }
+        .book-title {
+            padding: 10px 25px;
+            background-color: #f8f9fa;
+            color: var(--text-dark);
+            font-size: 14px;
+            font-weight: 700;
+            margin: 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar a {
+            padding: 12px 25px;
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #fafafa;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar a .icon { margin-right: 12px; font-size: 1.2em; }
+        .sidebar a:hover, .sidebar a.active {
+            background-color: #e9f2fa;
+            color: var(--primary-color);
+            font-weight: 700;
+            padding-left: 30px;
+        }
+
+        .highlight-red { color: #dc3545 !important; }
+        .highlight-red:hover { background-color: #f8d7da !important; }
+
+        .special-buttons { display: flex; flex-direction: column; gap: 10px; padding: 0 20px 20px 20px; margin-top: auto; }
+        .btn-link {
+            text-decoration: none; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; transition: all 0.3s;
+        }
+        .panel-link { background-color: #ffe0e0; color: #d32f2f; }
+        .panel-link:hover { background-color: #ffd0d0; }
+        .video-link { background-color: #e8f5e9; color: #2e7d32; }
+        .video-link:hover { background-color: #c8e6c9; }
+        .video-link.active { box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.3); border-color: #2e7d32; }
+
+        /* ================= Main Content & Pages ================= */
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-color);
+        }
+
+        /* Overlay for mobile sidebar */
+        .sidebar-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 100;
+        }
+
+        .page {
+            display: none;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            line-height: 1.8;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .page.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ================= Content Styling ================= */
+        h2 { color: var(--primary-color); border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 25px; }
+        .section-title { color: #28a745; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-top: 35px; margin-bottom: 15px; }
+        .example-title { color: #17a2b8; margin-bottom: 10px; font-weight: 700; }
+        
+        .prompt-box, .formula-box {
+            padding: 20px; border-radius: 8px; margin-bottom: 20px;
+        }
+        .prompt-box {
+            background-color: #f8f9fa; border-left: 5px solid var(--primary-color);
+            font-style: italic; color: var(--text-light);
+        }
+        .formula-box {
+            background-color: #fff3cd; border-left: 5px solid #ffc107;
+        }
+        .formula-box h4 { margin-top: 0; color: #856404; font-size: 16px; margin-bottom: 10px;}
+        .formula-box ul { padding-left: 20px; color: var(--text-dark); margin-bottom: 0;}
+        .formula-box li { margin-bottom: 5px; }
+        .tips-list { padding-left: 20px; }
+        .tips-list li { margin-bottom: 10px; }
+
+        /* ================= Video Player Styling ================= */
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .video-playlist {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+        .video-item {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .video-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .video-item.active {
+            border-color: #2e7d32;
+            box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
+            background-color: #f1f8e9;
+        }
+        .video-item img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+        }
+        .video-info {
+            padding: 12px;
+        }
+        .video-info h4 {
+            font-size: 14px;
+            margin: 0 0 5px 0;
+            color: var(--text-dark);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .video-info p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        /* ================= Responsive Design (Mobile) ================= */
+        @media (max-width: 768px) {
+            .mobile-header { display: flex; }
+            .main-content { padding: 80px 15px 30px 15px; } 
+            
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                height: 100%;
+                transition: left 0.3s ease;
+            }
+            .sidebar.mobile-open { left: 0; }
+            .sidebar-overlay.active { display: block; }
+            
+            .page { padding: 25px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <img src="https://ai.reankh.org/images/logo.png" alt="Logo" style="height: 30px;">
+        <button class="menu-btn" onclick="toggleMobileMenu()">☰</button>
+    </div>
+
+    <!-- Sidebar Overlay for mobile -->
+    <div class="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+
+    <div class="sidebar">
+        <img src="https://ai.reankh.org/images/logo.png" class="logo">
+        <p class="sidebar-title">Rean AI SPS-TPR</p>
+        
+        <div class="book-section">
+            <p class="book-title">ផ្នែកទី១៖ មូលដ្ឋាន AI</p>
+            <a href="#" class="nav-link active" onclick="showPage('lesson1Page', this)">
+                <span class="icon">✏️</span> ១. ក្បួនសរសេរ Prompt
+            </a>
+            <a href="#" class="nav-link" onclick="showPage('lesson2Page', this)">
+                <span class="icon">📄</span> ២. ការងាររដ្ឋបាល & បង្រៀន
+            </a>
+            <a href="#" class="nav-link" onclick="showPage('lesson3Page', this)">
+                <span class="icon">💻</span> ៣. ការបង្កើត App Script
+            </a>
+            <a href="#" class="nav-link" onclick="showPage('lesson4Page', this)">
+                <span class="icon">🌐</span> ៤. ការបង្កើត Web App
+            </a>
+            <a href="#" class="nav-link" onclick="showPage('lesson5Page', this)">
+                <span class="icon">🤖</span> ៥. ការបង្កើត Gems
+            </a>
+            <a href="#" class="nav-link" onclick="showPage('lesson6Page', this)">
+                <span class="icon">⚙️</span> ៦. បង្កើតក្នុង AI Studio
+            </a>
+            <a href="#" class="nav-link highlight-red" onclick="showPage('examplePage', this)">
+                <span class="icon">🛠️</span> ៧. ឧបករណ៍បង្កើត Prompt(រំគូ Gems)
+            </a>
+        </div>
+
+        <div class="book-section">
+            <p class="book-title"> ផ្នែកទី២</p>
+            <a href="#" class="nav-link" onclick="showPage('lesson8Page', this)">
+                <span class="icon">📖</span> AI ទូទៅ
+            </a>
+        </div>
+
+        <div class="special-buttons">
+            <a href="#" class="btn-link panel-link"><span class="icon">🔒</span> Admin Panel</a>
+            <!-- ប្តូរ onClick ឲ្យវាលោតទៅទំព័រ Video -->
+            <a href="#" class="btn-link video-link" onclick="showPage('videoPage', this)">
+                <span class="icon">🎬</span> Video មេរៀន
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        
+        <!-- Lesson 1 -->
+        <div id="lesson1Page" class="page active">
+            <h2>១. ក្បួនសរសេរ Prompt</h2>
+            <p>ដើម្បីឱ្យ Gemini ឆ្លើយតបបានល្អ និងចំគោលដៅ លោកគ្រូ-អ្នកគ្រូគួរប្រើរូបមន្ត <strong>Role + Task + Context + Format</strong>៖</p>
+
+            <div class="formula-box">
+                <h4>💡 រូបមន្ត៖ តួនាទី (Role) + ភារកិច្ច (Task) + បរិបទ/លក្ខខណ្ឌ (Context) + ទម្រង់លទ្ធផល (Format)</h4>
+                <ul>
+                    <li><strong>Role (តួនាទី):</strong> ប្រាប់ឱ្យវាដើរតួជាអ្នកណា (ឧ. "អ្នកជាគ្រូបង្រៀនថ្នាក់ទី៧...")</li>
+                    <li><strong>Task (ភារកិច្ច):</strong> ប្រាប់ពីអ្វីដែលយើងចង់ឱ្យវាធ្វើ (ឧ. "ចូរបង្កើតលំហាត់ប្រាណ...")</li>
+                    <li><strong>Context (បរិបទ):</strong> ព័ត៌មានបន្ថែម ឬកម្រិតសិស្ស (ឧ. "សម្រាប់សិស្សទើបចាប់ផ្ដើមរៀនដំបូង...")</li>
+                    <li><strong>Format (ទម្រង់):</strong> ចង់បានលទ្ធផលជាអ្វី (ឧ. "ជាតារាង", "ជាចំណុចៗ", "ជាកិច្ចតែងការ")</li>
+                </ul>
+            </div>
+
+            <h3 class="section-title">ផ្នែកទី ៣៖ ឧទាហរណ៍អនុវត្តជាក់ស្តែងសម្រាប់គ្រូបង្រៀន (២៥ នាទី)</h3>
+            <p>លោកគ្រូអាចយកល្បិច (Prompts) ទាំងនេះទៅបង្ហាញនៅលើអេក្រង់ផ្ទាល់ជូនលោកគ្រូ-អ្នកគ្រូ៖</p>
+
+            <h4 class="example-title">គំរូទី ១៖ ការបង្កើតកិច្ចតែងការបង្រៀន (Lesson Plan)</h4>
+            <div class="prompt-box">
+                "ចូរដើរតួជាគ្រូបង្រៀនផ្នែកបច្ចេកវិទ្យា (ICT)។ ចូរបង្កើតកិច្ចតែងការបង្រៀនមួយស្ដីពី 'មូលដ្ឋានគ្រឹះនៃការប្រើប្រាស់ Microsoft Word សម្រាប់សិស្សកម្រិតដំបូង'។ មេរៀននេះមានរយៈពេល ៤៥នាទី។ សូមរៀបចំឱ្យមាន៖ គោលបំណងមេរៀន, សកម្មភាពទី១ (ការណែនាំ), សកម្មភាពទី២ (ការអនុវត្តផ្ទាល់), និងសំណួរវាយតម្លៃនៅចុងម៉ោង។ សូមរៀបចំជាទម្រង់ចំណុចៗងាយអាន។"
+            </div>
+
+            <h4 class="example-title">គំរូទី ២៖ ការបង្កើតកម្រងសំណួរ ឬសន្លឹកកិច្ចការ (Quiz/Worksheet)</h4>
+            <div class="prompt-box">
+                "ចូរបង្កើតសំណួរជ្រើសរើសចម្លើយត្រឹមត្រូវ (Multiple Choice) ចំនួន ៥ សំណួរ ស្ដីពី 'ប្រវត្តិប្រាសាទអង្គរវត្ត' សម្រាប់សិស្សថ្នាក់ទី៩។ សូមដាក់ចម្លើយជ្រើសរើស A, B, C, D និងផ្ដល់ចម្លើយត្រឹមត្រូវនៅផ្នែកខាងក្រោមបង្អស់។"
+            </div>
+
+            <h4 class="example-title">គំរូទី ៣៖ ការពន្យល់មេរៀនពិបាកៗឱ្យទៅជាងាយយល់</h4>
+            <div class="prompt-box">
+                "ចូរពន្យល់ពី 'ដំណើរការរស្មីសំយោគរបស់រុក្ខជាតិ' ឱ្យងាយយល់បំផុត ដូចកំពុងនិយាយប្រាប់ក្មេងអាយុ ១០ឆ្នាំ។ សូមប្រើប្រាស់ការប្រៀបធៀបដែលងាយស្រួលស្រមៃ។"
+            </div>
+
+            <h3 class="section-title" style="color: #dc3545;">ផ្នែកទី ៤៖ គន្លឹះកម្រិតខ្ពស់ និងការបង្កើត "Gems" ផ្ទាល់ខ្លួន (១០ នាទី)</h3>
+            <ul class="tips-list">
+                <li><strong>ការបង្កើត Gems (Custom AI):</strong> ណែនាំលោកគ្រូ-អ្នកគ្រូពីរបៀបបង្កើត "Gems" ផ្ទាល់ខ្លួន (សម្រាប់គណនី Gemini Advanced) ដោយកំណត់មុខងារវាឱ្យទៅជា "ជំនួយការគ្រូបង្រៀនផ្ទាល់ខ្លួន" ដែលចាំតែជួយបង្កើតមេរៀន និងកែលំហាត់ឱ្យយើងជានិច្ច ដោយមិនបាច់វាយបញ្ជាដដែលៗឡើយ។</li>
+                <li><strong>ការបញ្ចូលឯកសារ (Upload Files):</strong> លោកគ្រូ-អ្នកគ្រូអាចទាញទម្លាក់ (Drag & Drop) ឯកសារមេរៀនចាស់ៗ ឬរូបភាពចូលទៅក្នុង Gemini រួចបញ្ជាឱ្យវា៖
+                    <ul>
+                        <li>សង្ខេបអត្ថបទវែងៗ។</li>
+                        <li>បង្កើតសំណួរចេញពីឯកសារនោះ។</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Lesson 2 -->
+        <div id="lesson2Page" class="page">
+            <h2>២. ការងាររដ្ឋបាល & បង្រៀន</h2>
+            
+            <h3 class="section-title">១. ផ្នែកការងាររដ្ឋបាល (Administration)</h3>
+            <p><strong>គោលបំណង៖</strong> ជួយសម្រួលដល់ការសរសេរលិខិតផ្លូវការ ការរៀបចំរបៀបវារៈប្រជុំ ឬការសង្ខេបឯកសារ។</p>
+            
+            <h4 class="example-title">Prompt គំរូសរសេរលិខិតផ្លូវការ៖</h4>
+            <div class="prompt-box">
+                "សូមដើរតួជាមន្ត្រីរដ្ឋបាលជំនាញម្នាក់។ ជួយសរសេរ លិខិតអញ្ជើញផ្លូវការ មួយច្បាប់ទៅកាន់ [ឈ្មោះបុគ្គល/ស្ថាប័ន] ដើម្បីចូលរួមក្នុងកម្មវិធី [ឈ្មោះកម្មវិធី] ដែលនឹងប្រព្រឹត្តទៅនៅថ្ងៃទី [កាលបរិច្ឆេទ] វេលាម៉ោង [ម៉ោង] នៅ [ទីកន្លែង]។ សូមប្រើប្រាស់ភាសាផ្លូវការ គួរសម ត្រឹមត្រូវតាមទម្រង់រដ្ឋបាលខ្មែរ និងមានរចនាសម្ព័ន្ធច្បាស់លាស់ (មាន យោង, គោលបំណង, និងខ្លឹមសារ)។"
+            </div>
+
+            <h4 class="example-title">Prompt គំរូរៀបចំរបៀបវារៈប្រជុំ (Meeting Agenda)៖</h4>
+            <div class="prompt-box">
+                "សូមជួយរៀបចំ របៀបវារៈប្រជុំ (Meeting Agenda) សម្រាប់កិច្ចប្រជុំរយៈពេល ២ ម៉ោង ស្តីពី [ប្រធានបទប្រជុំ ឧទាហរណ៍៖ ការវាយតម្លៃលទ្ធផលការងារប្រចាំត្រីមាសទី១]។ សូមបែងចែកពេលវេលាឱ្យបានសមស្របសម្រាប់វគ្គនីមួយៗ រួមទាំងពេលពិភាក្សា និងសួរដេញដោល ដោយរៀបចំជាទម្រង់តារាងងាយស្រួលមើល។"
+            </div>
+
+            <h3 class="section-title">២. ផ្នែកការងារបង្រៀន (Teaching/Education)</h3>
+            <p><strong>គោលបំណង៖</strong> ជួយគ្រូបង្រៀនក្នុងការរៀបចំកិច្ចតែងការបង្រៀន បង្កើតលំហាត់ ឬពន្យល់មេរៀនពិបាកៗឱ្យទៅជាងាយយល់។</p>
+            
+            <h4 class="example-title">Prompt គំរូបង្កើតកិច្ចតែងការបង្រៀន (Lesson Plan)៖</h4>
+            <div class="prompt-box">
+                "សូមដើរតួជាគ្រូបង្រៀនដែលមានបទពិសោធន៍។ ជួយបង្កើត កិច្ចតែងការបង្រៀន (Lesson Plan) មួយសម្រាប់មុខវិជ្ជា [ឈ្មោះមុខវិជ្ជា ឧទាហរណ៍៖ អក្សរសាស្ត្រខ្មែរ] ថ្នាក់ទី [បញ្ជាក់ថ្នាក់ ឧទាហរណ៍៖ ទី៩] លើប្រធានបទ '[ឈ្មោះមេរៀន]' សម្រាប់រយៈពេល ៥០ នាទី។ នៅក្នុងកិច្ចតែងការ សូមរួមបញ្ចូល៖<br><br>
+                • វត្ថុបំណងនៃការរៀនសូត្រ (Knowledge, Skills, Attitude)<br>
+                • សកម្មភាពគ្រូ និងសកម្មភាពសិស្ស (ជំហានទី១ ដល់ ទី៥)<br>
+                • វិធីសាស្ត្រវាយតម្លៃការយល់ដឹងរបស់សិស្សចុងម៉ោង។"
+            </div>
+
+            <h4 class="example-title">Prompt គំរូបង្កើតកម្រងសំណួរ/លំហាត់ (Quiz/Exercises)៖</h4>
+            <div class="prompt-box">
+                "សូមបង្កើត សំណួរជ្រើសរើសចម្លើយត្រឹមត្រូវ (Multiple Choice Questions - MCQs) ចំនួន ៥ សំណួរ សម្រាប់សិស្សថ្នាក់ទី [បញ្ជាក់ថ្នាក់] លើមេរៀន '[ឈ្មោះមេរៀន]'។ សំណួរនីមួយៗត្រូវមានជម្រើស ៤ (A, B, C, D) និងសូមផ្តល់ចម្លើយត្រឹមត្រូវ រួមទាំងការបកស្រាយខ្លីៗនៅផ្នែកខាងក្រោមបង្អស់។"
+            </div>
+        </div>
+
+        <!-- Lesson 3 -->
+        <div id="lesson3Page" class="page">
+            <h2>៣. ការបង្កើត App Script</h2>
+            
+            <h3 class="section-title">ជំហានទី ១៖ ចូលទៅកាន់ Script Editor</h3>
+            <ul class="tips-list">
+                <li>បើក <strong>Google Form</strong> របស់អ្នកដែលអ្នកចង់បន្ថែមផ្ទៃកូដ។</li>
+                <li>នៅជ្រុងខាងស្តាំផ្នែកខាងលើ សូមចុចលើ សញ្ញាចុចបី (<strong>More ⠇</strong>)។</li>
+                <li>អូសចុះក្រោម រួចជ្រើសរើសយកពាក្យ <strong>"Script editor"</strong> (កម្មវិធីកែសម្រួលស្គ្រីប)។ វានឹងបើកផ្ទាំងថ្មីមួយទៀតដែលជាផ្ទាំង Google Apps Script។</li>
+            </ul>
+
+            <h3 class="section-title">ជំហានទី ២៖ ដាក់បញ្ចូលកូដ (Paste Code)</h3>
+            <ul class="tips-list">
+                <li>នៅពេលដែលផ្ទាំង Apps Script លោតចេញមក អ្នកនឹងឃើញកូដដើមដែលគេដាក់ឱ្យស្រាប់ (ជាទូទៅគឺ <code>function myFunction() { }</code>)។</li>
+                <li>សូម <strong>លុប</strong> កូដដើមនោះចោលទាំងអស់។</li>
+                <li><strong>Paste (ដាក់បញ្ចូល)</strong> កូដ Apps Script ថ្មីរបស់អ្នកចូលទៅក្នុងផ្ទាំងនោះ។</li>
+                <li>នៅផ្នែកខាងលើខាងឆ្វេង អ្នកអាចចុចលើពាក្យ "Untitled project" ដើម្បីប្តូរឈ្មោះ Project របស់អ្នកឲ្យងាយស្រួលចំណាំ។</li>
+                <li>ចុចសញ្ញា <strong>Save</strong> (រក្សាទុក) ដែលជារូបថាសនៅរបារខាងលើ ឬចុច <strong>Ctrl + S</strong> (សម្រាប់ Windows) / <strong>Cmd + S</strong> (សម្រាប់ Mac)។</li>
+            </ul>
+
+            <h3 class="section-title">ជំហានទី ៣៖ ដំណើរការកូដ (Run) និងការអនុញ្ញាតសិទ្ធិ (Authorization)</h3>
+            <p>ពេលខ្លះកូដរបស់អ្នកត្រូវការសិទ្ធិដើម្បីដំណើរការ (ឧទាហរណ៍៖ សិទ្ធិផ្ញើអ៊ីមែល ឬទាញយកទិន្នន័យ)។ ដើម្បីផ្តល់សិទ្ធិ៖</p>
+            <ul class="tips-list">
+                <li>នៅរបារខាងលើ សូមចុចប៊ូតុង <strong>"Run"</strong> (ដំណើរការ)។</li>
+                <li>វានឹងលោតផ្ទាំងមួយផ្ទាំងបញ្ជាក់ពី Authorization required (ទាមទារការអនុញ្ញាតសិទ្ធិ) -> សូមចុច <strong>Review permissions</strong>។</li>
+                <li>ជ្រើសរើស <strong>គណនី Google (Gmail)</strong> របស់អ្នក។</li>
+                <li>ដោយសារវាមិនមែនជា App ផ្លូវការរបស់ Google វានឹងលោតផ្ទាំងព្រមាន។ សូមចុចលើពាក្យ <strong>Advanced (កម្រិតខ្ពស់)</strong> នៅផ្នែកខាងក្រោម។</li>
+                <li>បន្ទាប់មកចុចលើពាក្យ <strong>Go to [ឈ្មោះ Project របស់អ្នក] (unsafe)</strong>។</li>
+                <li>អូសចុះក្រោមបន្តិច រួចចុចពាក្យ <strong>Allow (អនុញ្ញាត)</strong> ជាការស្រេច។</li>
+            </ul>
+
+            <h3 class="section-title">ជំហានទី ៤៖ ការកំណត់ Triggers (ប្រសិនបើកូដទាមទារ)</h3>
+            <p>ប្រសិនបើកូដរបស់អ្នករចនាឡើងដើម្បីឲ្យវាដំណើរការដោយស្វ័យប្រវត្តិ នៅពេលមានអ្នកចុច Submit Form (បញ្ជូនទម្រង់) អ្នកត្រូវកំណត់ Trigger៖</p>
+            <div class="formula-box">
+                <ul>
+                    <li>នៅរបារខាងឆ្វេងនៃផ្ទាំង Apps Script សូមចុចលើរូប <strong>នាឡិកា (Triggers)</strong>។</li>
+                    <li>ចុចប៊ូតុង <strong>"+ Add Trigger"</strong> (បន្ថែមគន្លឹះ) នៅជ្រុងខាងស្តាំខាងក្រោម។</li>
+                    <li>វានឹងលោតផ្ទាំងមួយមក សូមកំណត់ដូចខាងក្រោម៖
+                        <ul>
+                            <li><strong>Choose which function to run:</strong> ជ្រើសរើសឈ្មោះ Function កូដរបស់អ្នក។</li>
+                            <li><strong>Select event source:</strong> ជ្រើសរើសយក "From form"។</li>
+                            <li><strong>Select event type:</strong> ជ្រើសរើសយក "On form submit" (មានន័យថាកូដនឹងរត់ពេលមានអ្នក Submit Form)។</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Lesson 4 -->
+        <div id="lesson4Page" class="page">
+            <h2>៤. ការបង្កើត Web App</h2>
+            
+            <h3 class="section-title">ដំណាក់កាលទី ១៖ ការរៀបចំរចនាសម្ព័ន្ធទូទៅ (Project Setup & Architecture)</h3>
+            <p>ប្រើ Prompt នេះដើម្បីឲ្យ AI ជួយរៀបចំគម្រោង និងជ្រើសរើសបច្ចេកវិទ្យាដែលស័ក្តិសម។</p>
+            <div class="prompt-box">
+                "ខ្ញុំចង់បង្កើត Web App មួយសម្រាប់វិស័យអប់រំ ដែលមានមុខងារចម្បង៣គឺ៖<br>
+                ១. ធ្វើតេស្តអនឡាញ (Online Testing)<br>
+                ២. ហ្គេមក្នុងថ្នាក់ (In-class Games ដូចជា Kahoot) និង<br>
+                ៣. សកម្មភាពអន្តរកម្មប្លែកៗ (Interactive Activities)។<br><br>
+                សូមជួយណែនាំ Tech Stack ដែលល្អបំផុតសម្រាប់បង្កើត Web App នេះ (ឧទាហរណ៍៖ React, Node.js, Firebase, Socket.io) ដោយផ្តោតលើភាពរលូនពេលសិស្សចូលលេងច្រើននាក់ (Real-time)។ បន្ទាប់មក សូមបង្កើតរចនាសម្ព័ន្ធថតឯកសារ (Folder Structure) សម្រាប់គម្រោងនេះ។"
+            </div>
+
+            <h3 class="section-title">ដំណាក់កាលទី ២៖ មុខងារធ្វើតេស្តអនឡាញ (Online Testing Module)</h3>
+            <p>ប្រើ Prompt នេះដើម្បីបង្កើតប្រព័ន្ធប្រឡង ឬសួរដេញដោល។</p>
+            <div class="prompt-box">
+                "ផ្អែកលើគម្រោងខាងលើ សូមសរសេរកូដសម្រាប់ទំព័រ 'Online Test'។ មុខងារដែលខ្ញុំចង់បានរួមមាន៖<br><br>
+                • មានសំនួរពហុជ្រើសរើស (Multiple Choice Questions) ដែលទាញយកពី Database។<br>
+                • មាននាឡិកាកំណត់ម៉ោងរាប់ថយក្រោយ (Countdown Timer) សម្រាប់សំនួរនីមួយៗ។<br>
+                • បង្ហាញពិន្ទុភ្លាមៗ (Auto-grading) នៅពេលសិស្សធ្វើតេស្តចប់។<br>
+                • ចំណុចប្រទាក់ (UI) ត្រូវមានភាពទាក់ទាញ ងាយស្រួលមើល និងអាចប្រើបានយ៉ាងល្អនៅលើទូរស័ព្ទដៃ (Mobile Responsive)។"
+            </div>
+
+            <h3 class="section-title">ដំណាក់កាលទី ៣៖ មុខងារហ្គេមក្នុងថ្នាក់ (In-Class Games - Real-time)</h3>
+            <p>នេះជាផ្នែកសំខាន់ដើម្បីបង្កើតភាពសប្បាយរីករាយ ដោយប្រើបច្ចេកវិទ្យា Real-time។</p>
+            <div class="prompt-box">
+                "ឥឡូវនេះ សូមសរសេរកូដសម្រាប់មុខងារ 'Live Class Game' ដែលដំណើរការជាលក្ខណៈ Real-time (សូមប្រើ Socket.io ឬ Firebase)។ លក្ខខណ្ឌមានដូចខាងក្រោម៖<br><br>
+                • គ្រូជាអ្នកបង្កើតបន្ទប់ (Create Room) និងមានលេខកូដ (PIN Code) សម្រាប់ឲ្យសិស្សវាយបញ្ចូលដើម្បីចូលរួម។<br>
+                • នៅពេលគ្រូចុច 'ចាប់ផ្តើម' សំនួរនឹងលោតនៅលើអេក្រង់របស់សិស្សទាំងអស់ក្នុងពេលតែមួយ។<br>
+                • សិស្សដែលឆ្លើយត្រូវនិងលឿនជាងគេ នឹងទទួលបានពិន្ទុច្រើនជាង។<br>
+                • មានតារាងពិន្ទុ (Leaderboard) បង្ហាញអ្នកលេខ១ លេខ២ និងលេខ៣ នៅចន្លោះសំនួរនីមួយៗ និងនៅពេលបញ្ចប់ហ្គេម។"
+            </div>
+
+            <h3 class="section-title">ដំណាក់កាលទី ៤៖ មុខងារសកម្មភាពប្លែកៗ (Unique Interactive Activities)</h3>
+            <p>បន្ថែមមុខងារកម្សាន្ត និងបំបាត់ភាពធុញថប់ក្នុងថ្នាក់។</p>
+            <div class="prompt-box">
+                "ដើម្បីធ្វើឲ្យ Web App នេះកាន់តែប្លែក សូមជួយសរសេរកូដបង្កើត 'កញ្ចប់សកម្មភាពសប្បាយៗ' (Fun Activities Module) ចំនួន ២ មុខងារ៖<br><br>
+                • <strong>កងបង្វិលរើសឈ្មោះ (Random Name Spinner):</strong> ជាកងរង្វង់ដែលគ្រូអាចបញ្ចូលឈ្មោះសិស្ស ហើយចុចបង្វិលដើម្បីហៅឈ្មោះសិស្សឲ្យឆ្លើយសំនួរដោយចៃដន្យ ជាមួយនឹង Effect សំឡេង និងរូបភាពអបអរសាទរ។<br>
+                • <strong>ក្តារបញ្ចេញមតិរូបអារម្មណ៍ (Emoji Reaction Board):</strong> ជាទំព័រមួយដែលសិស្សអាចចុចបញ្ជូន Emojis (👍, ❤️, 👏, 😂) ពីទូរស័ព្ទរបស់ពួកគេ ហើយវានឹងហោះអណ្តែតពេញអេក្រង់ធំរបស់គ្រូក្នុងពេលបង្រៀន ដើម្បីបង្ហាញពីការចាប់អារម្មណ៍របស់ពួកគេ។"
+            </div>
+        </div>
+        
+        <!-- Lesson 5 -->
+        <div id="lesson5Page" class="page">
+            <h2>៥. ការបង្កើត Gems</h2>
+            
+            <div class="formula-box">
+                <h4>🎯 គោលបំណងមេរៀន៖</h4>
+                <ul>
+                    <li>យល់ដឹងពីការកំណត់តួនាទី និងគោលដៅរបស់ Custom Gem (Google Gemini)។</li>
+                    <li>ចេះប្រើប្រាស់ទម្រង់ Prompt ថ្នាក់ខ្ពស់ដើម្បីបង្កើត Instructions ដែលមានរចនាសម្ព័ន្ធច្បាស់លាស់។</li>
+                </ul>
+            </div>
+
+            <h3 class="section-title">១. សេចក្តីណែនាំ</h3>
+            <p>ការបង្កើត Custom Gem ដែលឆ្លាតវៃ និងធ្វើការបានចំគោលដៅ គឺទាមទារឱ្យមានការផ្តល់ការណែនាំ (Instructions) ដ៏លម្អិត។ ខាងក្រោមនេះជាគំរូ Master Prompt ដែលអ្នកអាចយកទៅប្រើប្រាស់ដើម្បីឱ្យ AI ជួយរៀបចំគ្រោង Instructions ឱ្យបានល្អឥតខ្ចោះ។</p>
+
+            <h3 class="section-title">២. គំរូ Prompt សម្រាប់យកទៅប្រើប្រាស់ (Copy ទៅប្រើក្នុង Gemini)</h3>
+            <p style="color: #dc3545; font-weight: bold; margin-bottom: 10px;">ចំណាំ៖ សូមប្តូរព័ត៌មាននៅក្នុងសញ្ញា [ ] ទៅតាមតម្រូវការជាក់ស្តែងរបស់អ្នក មុននឹងផ្ញើទៅកាន់ AI។</p>
+            
+            <div class="prompt-box">
+                <strong>PROMPT TEMPLATE</strong><br><br>
+                I want to create a custom Gem. Please write a highly detailed, structured, and effective Instruction set for my Gem based on the details below.<br><br>
+                
+                Here are the details of my Gem:<br>
+                - Name of the Gem: [ដាក់ឈ្មោះ Gem របស់អ្នកនៅទីនេះ]<br>
+                - Role/Purpose: [ពន្យល់ពីតួនាទី ឬគោលបំណងរបស់វា ឧទាហរណ៍៖ ជាអ្នកជំនាញសរសេរ Content លក់អនឡាញ]<br>
+                - Target Audience: [អ្នកប្រឡើប្រាស់ជាអ្នកណា? ឧទាហរណ៍៖ អាជីវករខ្នាតតូច, សិស្សនិស្សិត]<br>
+                - Tone of Voice: [ទម្រង់សំឡេង/អារម្មណ៍នៃឆ្លើយតប ឧទាហរណ៍៖ បែបអាជីព (Professional), មិត្តភាព (Friendly), ឬ បែបកំប្លែង (Humorous)]<br>
+                - Specific Rules/Constraints: [អ្វីដែលវាគួរធ្វើ និងមិនគួរធ្វើ ឧទាហរណ៍៖ ឆ្លើយតបជាភាសាខ្មែរជានិច្ច, មិនត្រូវប្រើពាក្យបច្ចេកទេសពេកទេ]<br><br>
+                
+                Please structure the Instructions into these sections:<br>
+                1. Role and Objective: (Define who the Gem is and its ultimate goal)<br>
+                2. Tone and Style: (Guidelines on how it should speak and format its answers)<br>
+                3. Step-by-Step Process: (How it should process the user's request)<br>
+                4. Constraints and Guardrails: (What it must avoid or never do)
+            </div>
+
+            <h3 class="section-title">៣. របៀបយកទៅអនុវត្តន៍</h3>
+            <p>បន្ទាប់ពីអ្នកបញ្ជូន Prompt ខាងលើទៅកាន់ Gemini រួចរាល់ វានឹងបង្កើតទម្រង់ Instructions មួយយ៉ាងលម្អិត។ អ្នកគ្រាន់តែថតចម្លង (Copy) លទ្ធផលដែលទទួលបាននោះ យកទៅដាក់ក្នុងប្រអប់ Instructions ពេលបង្កើត Custom Gem ថ្មីរបស់អ្នកជាការស្រេច។</p>
+        </div>
+
+        <!-- Lesson 6 -->
+        <div id="lesson6Page" class="page">
+            <h2>៦. បង្កើតក្នុង AI Studio</h2>
+            
+            <div class="formula-box">
+                <h4>🎯 គោលបំណងនៃមេរៀន៖</h4>
+                <ul>
+                    <li>យល់ដឹងពីអ្វីទៅជា Google AI Studio និងសារៈសំខាន់របស់វាក្នុងវិស័យអប់រំ។</li>
+                    <li>ចេះប្រើប្រាស់ Prompt Interface ផ្សេងៗ (Chat, Freeform, Structured)។</li>
+                    <li>អាចបង្កើត និងបណ្តុះបណ្តាល (Tune) ជំនួយការ AI ផ្ទាល់ខ្លួនសម្រាប់ជួយការងារបង្រៀន (ឧទាហរណ៍៖ AI ជួយបង្កើតកិច្ចតែងការ បង្កើតលំហាត់ ឬពន្យល់មេរៀន)។</li>
+                </ul>
+            </div>
+
+            <h3 class="section-title">ផ្នែកទី ១៖ សេចក្តីផ្តើម និងការស្គាល់ Google AI Studio</h3>
+            <h4 class="example-title">១. អ្វីទៅជា Google AI Studio?</h4>
+            <p>Google AI Studio គឺជាឧបករណ៍ (Prototyping Environment) ផ្អែកលើ Web របស់ក្រុមហ៊ុន Google ដែលអនុញ្ញាតឱ្យយើងធ្វើការពិសោធន៍ និងបង្កើតកម្មវិធីបញ្ជា AI ដោយប្រើប្រាស់ម៉ូដែលដ៏ខ្លាំងពូកែគឺ Gemini Models។ វាផ្តល់ភាពងាយស្រួលក្នុងការបង្កើត Prompt ស្មុគស្មាញ និងការកំណត់លក្ខខណ្ឌឱ្យ AI ឆ្លើយតបតាមអ្វីដែលយើងចង់បាន។</p>
+
+            <h4 class="example-title">២. ហេតុអ្វីលោកគ្រូ អ្នកគ្រូគួរប្រើប្រាស់ AI Studio?</h4>
+            <ul class="tips-list">
+                <li><strong>ភាពបត់បែនខ្ពស់៖</strong> អាចកំណត់ឱ្យ AI ដើរតួជាគ្រូបង្រៀនប្រចាំមុខវិជ្ជាណាមួយ ដែលមានសំដីទន់ភ្លន់ ឬម៉ឺងម៉ាត់បានតាមចិត្ត។</li>
+                <li><strong>Context Window ធំទូលាយ៖</strong> អាចដាក់ឯកសារមេរៀន (PDF, សៀវភៅទាំងមូល) ឬវីដេអូ ដើម្បីឱ្យ AI វិភាគ និងបង្កើតលំហាត់ចេញពីឯកសារនោះបានយ៉ាងត្រឹមត្រូវ។</li>
+                <li><strong>ឥតគិតថ្លៃ (Free Tier)៖</strong> មានកម្រិតប្រើប្រាស់ឥតគិតថ្លៃយ៉ាងទូលំទូលាយសម្រាប់សាកល្បង និងអភិវឌ្ឍ។</li>
+            </ul>
+
+            <h3 class="section-title">ផ្នែកទី ២៖ ការស្វែងយល់ពី Interface និងមុខងារសំខាន់ៗ</h3>
+            <p>មុននឹងចាប់ផ្តើម សូមចូលទៅកាន់៖ <strong>aistudio.google.com</strong> ហើយកត់សម្គាល់ចំណុចសំខាន់ៗចំនួន ៣៖</p>
+            
+            <h4 class="example-title">១. ប្រភេទនៃ Prompt (Create New Prompt)</h4>
+            <ul class="tips-list">
+                <li><strong>Chat Prompt:</strong> ប្រើសម្រាប់បង្កើតបទពិសោធន៍ជជែកពិភាក្សា (Conversational AI) ដូចជាការបង្កើត Chatbot សួរ-ឆ្លើយជាមួយសិស្ស។</li>
+                <li><strong>Freeform Prompt:</strong> ផ្ទាំងទទេរដែលអនុញ្ញាតឱ្យយើងដាក់បញ្ចូលទាំងអត្ថបទ និងរូបភាព/វីដេអូ (Multimodal) ដោយសេរី សាកសមសម្រាប់បង្កើតមេរៀន ឬលំហាត់។</li>
+                <li><strong>Structured Prompt:</strong> ការផ្តល់ឧទាហរណ៍ជាគំរូ (Few-shot prompting) ដើម្បីតម្រូវឱ្យ AI ឆ្លើយតបមកវិញចំទម្រង់ (Format) ដែលយើងចង់បានបេះបិទ។</li>
+            </ul>
+
+            <h4 class="example-title">២. ផ្ទាំងកំណត់ Config (ខាងស្តាំដៃ)</h4>
+            <ul class="tips-list">
+                <li><strong>Model:</strong> ការជ្រើសរើសម៉ូដែល (ឧទាហរណ៍៖ Gemini 1.5 Pro សម្រាប់ការគិតស៊ីជម្រៅ ឬ Gemini 1.5 Flash សម្រាប់ល្បឿនលឿន)។</li>
+                <li><strong>System Instructions:</strong> កន្លែងសំខាន់បំផុតសម្រាប់ដាក់ "ច្បាប់ ឬតួនាទី" ឱ្យ AI ដើរតួ (ឧទាហរណ៍៖ អ្នកគឺជាគ្រូបង្រៀនផ្នែកព័ត៌មានវិទ្យាថ្នាក់ទី១០...)។</li>
+                <li><strong>Temperature:</strong> ការកំណត់ភាពច្នៃប្រឌិត (ជិត 0 = ចម្លើយត្រង់ៗតាមការពិត, ជិត 1 = ច្នៃប្រឌិតខ្ពស់)។</li>
+            </ul>
+
+            <h3 class="section-title">ផ្នែកទី ៣៖ ការអនុវត្តផ្ទាល់ (Hands-on Workshop)</h3>
+            <h4 class="example-title">🎯 គម្រោង៖ បង្កើត "ជំនួយការរៀបចំកិច្ចតែងការ និងលំហាត់ថ្នាក់ដំបូង"</h4>
+            
+            <p><strong>ជំហានទី ១:</strong> ចុចលើ Create New Prompt រួចជ្រើសរើស Chat Prompt ឬ Freeform Prompt។</p>
+            <p><strong>ជំហានទី ២:</strong> នៅប្រអប់ System Instructions (ខាងស្តាំ) សូមវាយបញ្ចូលអត្ថបទខាងក្រោម៖</p>
+            <div class="prompt-box">
+                "អ្នកគឺជាជំនួយការ AI សម្រាប់លោកគ្រូ អ្នកគ្រូថ្នាក់ទី៧ ដល់ទី១២។ ភារកិច្ចរបស់អ្នកគឺជួយបង្កើតផែនការបង្រៀន (Lesson Plan) សង្ខេបមេរៀន និងបង្កើតកម្រងសំណួរ/លំហាត់។ រាល់ចម្លើយរបស់អ្នកត្រូវតែ៖<br><br>
+                - ឆ្លើយតបជាភាសាខ្មែរ ក្នុងទម្រង់ច្បាស់លាស់ ងាយស្រួលអាន (ប្រើប្រាស់ Bullet points)។<br>
+                - ផ្តល់ឧទាហរណ៍ជាក់ស្តែងដែលទាក់ទងនឹងបរិបទរស់នៅប្រចាំថ្ងៃរបស់សិស្ស។<br>
+                - បង្កើតសំណួរដែលមានកម្រិតគិតពីងាយទៅពិបាក។"
+            </div>
+
+            <p><strong>ជំហានទី ៣:</strong> ការសាកល្បងប្រើប្រាស់ (User Prompt) នៅក្នុងប្រអប់បញ្ចូលអត្ថបទ សូមសាកល្បងបញ្ជា៖</p>
+            <p><strong>ឧទាហរណ៍ទី ១៖</strong></p>
+            <div class="prompt-box">
+                "សូមជួយបង្កើតកិច្ចតែងការបង្រៀនខ្លីមួយស្តីពី 'ការប្រើប្រាស់ Microsoft Word សម្រាប់អ្នកចាប់ផ្តើមដំបូង' សម្រាប់រយៈពេល ៤៥ នាទី។"
+            </div>
+            <p><strong>ឧទាហរណ៍ទី ២ (Multimodal)៖</strong> ផ្ទុកឡើង (Upload) រូបភាពដ្យាក្រាម ឬទំព័រសៀវភៅណាមួយ រួចបញ្ជាថា៖</p>
+            <div class="prompt-box">
+                "សូមពន្យល់ពីរូបភាពនេះ និងបង្កើតសំណួរពហុជ្រើសរើស (Quiz) ចំនួន ៣ ចេញពីវា។"
+            </div>
+
+            <h3 class="section-title" style="color: #dc3545;">ផ្នែកទី ៤៖ បច្ចេកទេសកម្រិតខ្ពស់សម្រាប់គ្រូបង្រៀន</h3>
+            <h4 class="example-title">១. ការប្រើប្រាស់ Structured Prompt ដើម្បីកែវាយតម្លៃកិច្ចការសិស្ស</h4>
+            <p>គ្រូបង្រៀនអាចប្រើ Structured Prompt ដើម្បីបង្រៀន AI ឱ្យស្គាល់ពីរបៀបដាក់ពិន្ទុ៖</p>
+            <div class="prompt-box">
+                <strong>Input (កិច្ចការសិស្ស)៖</strong> [អត្ថបទដែលសិស្សសរសេរ]<br><br>
+                <strong>Output (ការវាយតម្លៃ)៖</strong> [ពិន្ទុ៖ .../១០ | ចំណុចល្អ៖ ... | ចំណុចត្រូវកែលម្អ៖ ...]
+            </div>
+            <p><em>(នៅពេលយើងផ្តល់ឧទាហរណ៍គំរូ ២-៣ ទៅ AI វានឹងកែវាយតម្លៃកិច្ចការសិស្សបន្ទាប់ៗទៀតបានយ៉ាងត្រឹមត្រូវតាមស្តង់ដាររបស់យើង)</em></p>
+
+            <h4 class="example-title">២. ការយកទៅប្រើប្រាស់ខាងក្រៅ (Get Code / Share)</h4>
+            <p>នៅពេលលោកគ្រូអ្នកគ្រូបង្កើត Prompt ជោគជ័យហើយ អាចចុចប៊ូតុង "Get Code" ដើម្បីយកកូដនោះទៅដាក់ក្នុងកម្មវិធីផ្សេងៗ ឬប្រើមុខងារ Share ដើម្បីចែករំលែក Prompt នោះទៅកាន់មិត្តភក្តិរួមអាជីពប្រើប្រាស់បន្ត។</p>
+        </div>
+        
+        <!-- Lesson 7 -->
+        <div id="examplePage" class="page">
+            <h2 style="color: #dc3545; border-color: #dc3545;">៧. ឧបករណ៍បង្កើត Prompt (គំរូ Gems)</h2>
+            <p>ខាងក្រោមនេះជាគំរូសម្រាប់បង្កើត Custom Gems តាមមុខវិជ្ជា និងតម្រូវការជាក់ស្តែងរបស់អ្នកគ្រូ-លោកគ្រូ៖</p>
+
+            <!-- គំរូទី ១ -->
+            <h3 class="section-title">ឧទាហរណ៍ទី ១៖ មុខវិជ្ជា «ភាសាអង់គ្លេស» (English Speaking Coach)</h3>
+            <div class="formula-box">
+                <ul>
+                    <li><strong>Name of the Gem:</strong> English Buddy</li>
+                    <li><strong>Role/Purpose:</strong> ជួយសិស្សហាត់និយាយភាសាអង់គ្លេសប្រចាំថ្ងៃ កែសម្រួលការបញ្ចេញសំឡេង (Pronunciation) និងកែទម្រង់វេយ្យាករណ៍ (Grammar) ឱ្យបានត្រឹមត្រូវ។</li>
+                    <li><strong>Target Audience:</strong> សិស្សខ្មែរដែលទើបចាប់ផ្តើមរៀននិយាយភាសាអង់គ្លេស។</li>
+                    <li><strong>Tone of Voice:</strong> បែបលើកទឹកចិត្ត (Encouraging) មិត្តភាព និងអត់ធ្មត់ខ្ពស់។</li>
+                    <li><strong>Specific Rules:</strong> ត្រូវឆ្លើយតបជាប្រយោគភាសាអង់គ្លេសខ្លីៗ និងងាយយល់ រួចបកប្រែជាភាសាខ្មែរនៅខាងក្រោម។ មិនត្រូវប្រើពាក្យពិបាកៗពេកទេ។</li>
+                </ul>
+            </div>
+            <h4 class="example-title">📝 គំរូ Prompt សម្រាប់កូពីទៅដាក់ក្នុង Gems System Instruction:</h4>
+            <div class="prompt-box">
+                You are "English Buddy", an encouraging, friendly, and patient English speaking coach for Cambodian beginners. Your role is to help them practice daily English conversation, correct their pronunciation, and fix their grammar errors.<br><br>
+                Strict Rules:<br>
+                1. Always respond in short, simple, and easy-to-understand English sentences.<br>
+                2. Below your English response, always provide a clear translation in Khmer.<br>
+                3. Do not use complex vocabulary or advanced idioms. Keep it supportive and motivating.
+            </div>
+
+            <!-- គំរូទី ២ -->
+            <h3 class="section-title">ឧទាហរណ៍ទី ២៖ មុខវិជ្ជា «គណិតវិទ្យា» (Math Tutor)</h3>
+            <div class="formula-box">
+                <ul>
+                    <li><strong>Name of the Gem:</strong> លោកគ្រូ គណិត (Math Master)</li>
+                    <li><strong>Role/Purpose:</strong> ជួយពន្យល់លំហាត់គណិតវិទ្យា (រូបមន្ត មេគុណ អាល់ហ្សែប និងធរណីមាត្រ) ដល់សិស្ស។</li>
+                    <li><strong>Target Audience:</strong> សិស្សអនុវិទ្យាល័យ និងវិទ្យាល័យ។</li>
+                    <li><strong>Tone of Voice:</strong> បែបគ្រូបង្រៀន ច្បាស់លាស់ ម៉ឺងម៉ាត់ ប៉ុន្តែយល់ចិត្តសិស្ស។</li>
+                    <li><strong>Specific Rules:</strong> ហាមប្រាប់ចម្លើយភ្លាមៗ! ត្រូវពន្យល់ពីរូបមន្ត និងបង្ហាញវិធីធ្វើមួយដំណាក់កាលម្តងៗ (Step-by-step) ដើម្បីឱ្យសិស្សគិតតាម។</li>
+                </ul>
+            </div>
+            <h4 class="example-title">📝 គំរូ Prompt សម្រាប់កូពីទៅដាក់ក្នុង Gems System Instruction:</h4>
+            <div class="prompt-box">
+                អ្នកគឺជា "លោកគ្រូ គណិត (Math Master)" ដែលជាគ្រូបង្រៀនគណិតវិទ្យាដ៏ច្បាស់លាស់ ម៉ឺងម៉ាត់ ប៉ុន្តែយល់ចិត្តសិស្ស។ ភារកិច្ចរបស់អ្នកគឺជួយពន្យល់លំហាត់គណិតវិទ្យា (រូបមន្ត មេគុណ អាល់ហ្សែប និងធរណីមាត្រ) ដល់សិស្សអនុវិទ្យាល័យ និងវិទ្យាល័យ។<br><br>
+                ច្បាប់ដាច់ខាត៖<br>
+                ១. ហាមប្រាប់ចម្លើយចុងក្រោយទៅកាន់សិស្សភ្លាមៗជាដាច់ខាត!<br>
+                ២. ត្រូវពន្យល់ពីរូបមន្តដែលទាក់ទង និងបង្ហាញវិធីធ្វើមួយដំណាក់កាលម្តងៗ (Step-by-step) ដើម្បីណែនាំ និងអនុញ្ញាតឱ្យសិស្សគិតតាម និងដោះស្រាយដោយខ្លួនឯង។
+            </div>
+
+            <!-- គំរូទី ៣ -->
+            <h3 class="section-title">ឧទាហរណ៍ទី ៣៖ មុខវិជ្ជា «ប្រវត្តិវិទ្យា» (History Storyteller)</h3>
+            <div class="formula-box">
+                <ul>
+                    <li><strong>Name of the Gem:</strong> តាប្រវត្តិសាស្ត្រ (Khmer History Guide)</li>
+                    <li><strong>Role/Purpose:</strong> ពន្យល់ និងនិទានរឿងរ៉ាវប្រវត្តិសាស្ត្រខ្មែរ និងពិភពលោក ឱ្យទៅជារឿងងាយចាំ។</li>
+                    <li><strong>Target Audience:</strong> សិស្ស និស្សិត និងអ្នកដែលចូលចិត្តស្រាវជ្រាវប្រវត្តិសាស្ត្រ។</li>
+                    <li><strong>Tone of Voice:</strong> បែបអ្នកនិទានរឿង (Storyteller) ជក់ចិត្ត និងគួរឱ្យចង់ស្ដាប់។</li>
+                    <li><strong>Specific Rules:</strong> រាល់ព័ត៌មានប្រវត្តិសាស្ត្រ (កាលបរិច្ឆេទ ឈ្មោះបុគ្គលព្រឹត្តិការណ៍) ត្រូវតែមានប្រភពច្បាស់លាស់ និងមិនត្រូវបញ្ចូលមតិផ្ទាល់ខ្លួនដែលនាំឱ្យមានការភាន់ច្រឡំឡើយ។</li>
+                </ul>
+            </div>
+            <h4 class="example-title">📝 គំរូ Prompt សម្រាប់កូពីទៅដាក់ក្នុង Gems System Instruction:</h4>
+            <div class="prompt-box">
+                អ្នកគឺជា "តាប្រវត្តិសាស្ត្រ (Khmer History Guide)" ជាអ្នកនិទានរឿងរ៉ាវប្រវត្តិសាស្ត្រខ្មែរ និងពិភពលោកប្រកបដោយភាពជក់ចិត្ត ដក់អារម្មណ៍ និងគួរឱ្យចង់ស្តាប់ សម្រាប់សិស្ស និស្សិត និងអ្នកស្រាវជ្រាវ។<br><br>
+                ច្បាប់ដាច់ខាត៖<br>
+                ១. ត្រូវបំប្លែងព្រឹត្តិការណ៍ប្រវត្តិសាស្ត្រស្ងួតៗឱ្យទៅជាសាច់រឿងដែលងាយចងចាំ។<br>
+                ២. រាល់ព័ត៌មានប្រវត្តិសាស្ត្រទាំងអស់ (កាលបរិច្ឆេទ ឈ្មោះបុគ្គល និងព្រឹត្តិការណ៍) ត្រូវតែផ្អែកលើការពិត និងមានប្រភពច្បាស់លាស់។<br>
+                ៣. ហាមបញ្ចូលមតិផ្ទាល់ខ្លួន ឬការសន្និដ្ឋានដែលគ្មានមូលដ្ឋាន ដែលនាំឱ្យមានការភាន់ច្រឡំប្រវត្តិសាស្ត្រ។
+            </div>
+
+            <!-- គំរូទី ៤ -->
+            <h3 class="section-title">ឧទាហរណ៍ទី ៤៖ មុខវិជ្ជា «ព័ត៌មានវិទ្យា/សរសេរកូដ» (Coding Mentor)</h3>
+            <div class="formula-box">
+                <ul>
+                    <li><strong>Name of the Gem:</strong> CodeBuddy</li>
+                    <li><strong>Role/Purpose:</strong> ជួយបង្រៀនសរសេរកូដ (Python, JavaScript, HTML/CSS) និងជួយរកកំហុសក្នុងកូដ (Debug)។</li>
+                    <li><strong>Target Audience:</strong> និស្សិតព័ត៌មានវិទ្យា (IT) ឆ្នាំទី១ ឬអ្នកទើបហាត់រៀនសរសេរកូដដំបូង។</li>
+                    <li><strong>Tone of Voice:</strong> បែបបច្ចេកវិទ្យា (Technical) ត្រង់ទៅត្រង់មក និងមានរចនាសម្ព័ន្ធស្អាត។</li>
+                    <li><strong>Specific Rules:</strong> នៅពេលបង្ហាញកូដ ត្រូវប្រើទម្រង់ Markdown code block ជានិច្ច និងត្រូវដាក់ការពន្យល់ (Comments) នៅក្នុងកូដជាភាសាខ្មែរ ដើម្បីឱ្យងាយយល់។</li>
+                </ul>
+            </div>
+            <h4 class="example-title">📝 គំរូ Prompt សម្រាប់កូពីទៅដាក់ក្នុង Gems System Instruction:</h4>
+            <div class="prompt-box">
+                You are "CodeBuddy", a technical, straightforward, and highly structured coding mentor for first-year IT students and beginners. You teach programming languages like Python, JavaScript, and HTML/CSS, and help them debug code.<br><br>
+                Strict Rules:<br>
+                1. When providing code, always wrap it inside Markdown code blocks.<br>
+                2. Inside the code blocks, always include helpful explanations (Comments) written in Khmer language so it's easy for them to understand.<br>
+                3. Keep the explanation direct, logical, and clean.
+            </div>
+
+            <!-- គំរូទី ៥ -->
+            <h3 class="section-title">ឧទាហរណ៍ទី ៥៖ មុខវិជ្ជា «រូបវិទ្យា» (Physics Lab Assistant)</h3>
+            <div class="formula-box">
+                <ul>
+                    <li><strong>Name of the Gem:</strong> Physics Expert</li>
+                    <li><strong>Role/Purpose:</strong> ជួយពន្យល់ពីបាតុភូតរូបវិទ្យាក្នុងជីវភាពរស់នៅ (ដូចជា កម្លាំងទំនាញ ចរន្តអគ្គិសនី ចលនា) និងជួយដោះស្រាយរូបមន្ត។</li>
+                    <li><strong>Target Audience:</strong> សិស្សថ្នាក់ទី ១០ ដល់ ទី ១២។</li>
+                    <li><strong>Tone of Voice:</strong> បែបវិទ្យាសាស្ត្រ ឡូហ្សិក (Logical) និងពោរពេញដោយចំណេះដឹង។</li>
+                    <li><strong>Specific Rules:</strong> ត្រូវលើកយកឧទាហរណ៍ជាក់ស្តែងដែលមើលឃើញជុំវិញខ្លួនមកពន្យល់ (ឧទាហរណ៍៖ ហេតុអ្វីបានជាផ្លែប៉ោមធ្លាក់ចុះក្រោម) មុននឹងឈានទៅដល់ការប្រើរូបមន្តគណនា។</li>
+                </ul>
+            </div>
+            <h4 class="example-title">📝 គំរូ Prompt សម្រាប់កូពីទៅដាក់ក្នុង Gems System Instruction:</h4>
+            <div class="prompt-box">
+                អ្នកគឺជា "Physics Expert" ដែលជាជំនួយការរូបវិទ្យាបែបវិទ្យាសាស្ត្រ មានតក្កវិជ្ជា (Logical) និងពោរពេញដោយចំណេះដឹង សម្រាប់សិស្សថ្នាក់ទី ១០ ដល់ ទី ១២។ ភារកិច្ចរបស់អ្នកគឺពន្យល់ពីបាតុភូតរូបវិទ្យាក្នុងជីវភាពរស់នៅ និងដោះស្រាយរូបមន្ត។<br><br>
+                ច្បាប់ដាច់ខាត៖<br>
+                ១. មុននឹងឈានទៅដល់ការប្រើរូបមន្តគណនា ត្រូវលើកយកឧទាហរណ៍ជាក់ស្តែងដែលមើលឃើញជុំវិញខ្លួនមកពន្យល់ជាមុនសិន (ឧទាហរណ៍៖ ការធ្លាក់ចុះនៃវត្ថុ កម្តៅថ្ងៃ ឬចរន្តអគ្គិសនីក្នុងផ្ទះ)។<br>
+                ២. ផ្តល់ការពន្យល់ដែលមានហេតុផលច្បាស់លាស់ និងរចនាសម្ព័ន្ធងាយយល់តាមបែបវិទ្យាសាស្ត្រ។
+            </div>
+        </div>
+
+        <div id="lesson8Page" class="page"><h2 style="color: #28a745; border-color: #28a745;">សៀវភៅទី២៖ AI រដ្ឋបាលសាលា</h2><p>កំពុងរៀបចំ...</p></div>
+
+        <!-- Video Page (NEW FEATURE) -->
+        <div id="videoPage" class="page">
+            <h2 style="color: #2e7d32; border-color: #2e7d32;">🎬 វីដេអូមេរៀន AI</h2>
+            <p style="margin-bottom: 20px;">សូមជ្រើសរើសវីដេអូខាងក្រោមដើម្បីទស្សនា៖</p>
+
+            <!-- Video Player -->
+            <div class="video-container">
+                <!-- ផ្លាស់ប្តូរ ID (Vihyv_n1mE8) ទៅជា YouTube ID របស់អ្នកនៅទីនេះ -->
+                <iframe id="mainVideoPlayer" src="https://www.youtube.com/embed/Vihyv_n1mE8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>
+
+            <!-- Video Playlist -->
+            <h3 class="section-title">បញ្ជីវីដេអូ៖</h3>
+            <p style="font-size: 14px; color: #dc3545; font-style: italic;">(ចំណាំ៖ លោកគ្រូអាចដូរលេខកូដ Video ID នៅក្នុងកូដដើម្បីដាក់វីដេអូពិតប្រាកដបាន)</p>
+            
+            <div class="video-playlist">
+                <!-- Video 1 -->
+                <div class="video-item active" onclick="changeVideo('Vihyv_n1mE8', this)">
+                    <img src="https://img.youtube.com/vi/Vihyv_n1mE8/hqdefault.jpg" alt="Thumbnail">
+                    <div class="video-info">
+                        <h4>មេរៀនទី១៖ ក្បួនសរសេរ Prompt សម្រាប់គ្រូបង្រៀន</h4>
+                        <p>រយៈពេល: 10:25</p>
+                    </div>
+                </div>
+
+                <!-- Video 2 -->
+                <div class="video-item" onclick="changeVideo('j_H20-W6w3M', this)">
+                    <img src="https://img.youtube.com/vi/j_H20-W6w3M/hqdefault.jpg" alt="Thumbnail">
+                    <div class="video-info">
+                        <h4>មេរៀនទី២៖ ការងាររដ្ឋបាល និងកិច្ចតែងការ</h4>
+                        <p>រយៈពេល: 15:30</p>
+                    </div>
+                </div>
+
+                <!-- Video 3 -->
+                <div class="video-item" onclick="changeVideo('c_hO_fjm260', this)">
+                    <img src="https://img.youtube.com/vi/c_hO_fjm260/hqdefault.jpg" alt="Thumbnail">
+                    <div class="video-info">
+                        <h4>មេរៀនទី៣៖ ការបង្កើត App Script កម្រិតមូលដ្ឋាន</h4>
+                        <p>រយៈពេល: 12:45</p>
+                    </div>
+                </div>
+
+                <!-- Video 4 -->
+                <div class="video-item" onclick="changeVideo('tF-X_s2A9wA', this)">
+                    <img src="https://img.youtube.com/vi/tF-X_s2A9wA/hqdefault.jpg" alt="Thumbnail">
+                    <div class="video-info">
+                        <h4>មេរៀនទី៤៖ ការបង្កើត Web App អប់រំ</h4>
+                        <p>រយៈពេល: 20:00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Function សម្រាប់ប្តូរទំព័រមេរៀន
+        function showPage(pageId, element) {
+            // លាក់ទំព័រទាំងអស់
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+
+            // បង្ហាញទំព័រដែលបានជ្រើសរើស
+            document.getElementById(pageId).classList.add('active');
+
+            // ផ្លាស់ប្តូរពណ៌លើម៉ឺនុយ (Active Menu)
+            const links = document.querySelectorAll('.nav-link, .btn-link'); // Added .btn-link to clear
+            links.forEach(link => link.classList.remove('active'));
+            if(element) {
+                element.classList.add('active');
+            }
+            
+            // រមូរទៅលើបំផុត
+            document.getElementById('mainContent').scrollTop = 0;
+
+            // បិទម៉ឺនុយវិញបើសិនជាកំពុងប្រើលើទូរស័ព្ទ (Mobile)
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            if(sidebar.classList.contains('mobile-open')) {
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('active');
+            }
+        }
+
+        // Toggle Mobile Menu
+        function toggleMobileMenu() {
+            document.querySelector('.sidebar').classList.toggle('mobile-open');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+
+        // មុខងារសម្រាប់ប្តូរវីដេអូ YouTube (Video Player Logic)
+        function changeVideo(videoId, element) {
+            // ប្តូរ Link នៅក្នុង iframe
+            const player = document.getElementById('mainVideoPlayer');
+            player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+
+            // ប្តូរពណ៌កន្លែងដែលត្រូវបានរើស (Active highlight)
+            const items = document.querySelectorAll('.video-item');
+            items.forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+
+            // អូសទំព័រទៅលើ (Scroll to player smoothly)
+            document.getElementById('mainContent').scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    </script>
+
+</body>
+</html>
